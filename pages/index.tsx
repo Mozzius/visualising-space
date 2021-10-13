@@ -13,7 +13,7 @@ const Content: React.FC = () => {
       <OrbitControls />
       <ambientLight color={0x333333} />
       <directionalLight color={0xffffff} intensity={1} position={[0, 0, 1]} />
-      <Planet type="earth" />
+      <Planet type="moon" />
     </>
   );
 };

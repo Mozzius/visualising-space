@@ -1,9 +1,9 @@
 import { useFrame, useLoader } from "@react-three/fiber";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { DoubleSide, TextureLoader } from "three";
 
 import textureMap from "../../../images/8081_earthmap10k.jpg";
-import normalMap from "../../../images/8081_earthbump10k.jpg";
+import displacementMap from "../../../images/8081_earthbump10k.jpg";
 import specularMap from "../../../images/8081_earthspec10k.jpg";
 import cloudMap from "../../../images/earthcloudmap.jpg";
 import cloudAlphaMap from "../../../images/earthcloudmaptransinverted.jpg";
@@ -11,14 +11,17 @@ import cloudAlphaMap from "../../../images/earthcloudmaptransinverted.jpg";
 interface EarthProps {}
 
 const Earth: React.FC<EarthProps> = ({}) => {
-  const [texture, normal, specular, clouds, alpha] = useLoader(TextureLoader, [
-    textureMap.src,
-    normalMap.src,
-    specularMap.src,
-    cloudMap.src,
-    cloudAlphaMap.src,
-  ]);
-  const earthRef = useRef<THREE.Mesh>(null);
+  const [texture, displacement, specular, clouds, alpha] = useLoader(
+    TextureLoader,
+    [
+      textureMap.src,
+      displacementMap.src,
+      specularMap.src,
+      cloudMap.src,
+      cloudAlphaMap.src,
+    ],
+  );
+  const earthRef = useRef<THREE.Group>(null);
   const cloudRef = useRef<THREE.Mesh>(null);
 
   useFrame((_, delta) => {
@@ -42,7 +45,7 @@ const Earth: React.FC<EarthProps> = ({}) => {
         <sphereBufferGeometry args={[1, 512, 512]} />
         <meshPhongMaterial
           map={texture}
-          displacementMap={normal}
+          displacementMap={displacement}
           displacementScale={0.01}
           specularMap={specular}
         />

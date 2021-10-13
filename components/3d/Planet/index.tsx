@@ -16,7 +16,11 @@ const Planet: React.FC<PlanetProps> = ({ type, ...props }) => {
         </Suspense>
       );
     case "moon":
-      return <Moon {...props} />;
+      return (
+        <Suspense fallback={null}>
+          <Moon {...props} />
+        </Suspense>
+      );
   }
 };
 
