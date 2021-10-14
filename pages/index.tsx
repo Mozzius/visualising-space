@@ -1,25 +1,56 @@
-import { OrbitControls, Stars } from "@react-three/drei";
+import { Html, OrbitControls, Stars } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
+import { useControls } from "leva";
 import type { NextPage } from "next";
 import Head from "next/head";
+import { Suspense, useEffect, useRef } from "react";
 import { createUseStyles } from "react-jss";
 
-import Planet from "../components/3d/Planet";
+import Orbit from "../components/3d/Orbit";
+import { config } from "../state/proxies";
+import Moon from "../components/3d/Planets/Moon";
+import Earth from "../components/3d/Planets/Earth";
 
-const Content: React.FC = () => {
+// sizing: 1 unit = 1000 km
+
+const Scene: React.FC = () => {
+  const earthRef = useRef<THREE.Mesh>(null);
   return (
     <>
-      <Stars />
+      {/* <Stars /> */}
       <OrbitControls />
-      <ambientLight color={0x333333} />
+      {/* <ambientLight color={0x333333} /> */}
       <directionalLight color={0xffffff} intensity={1} position={[0, 0, 1]} />
-      <Planet type="moon" />
+      <Suspense fallback={null}>
+        <Earth ref={earthRef}>
+          <Orbit apogee={406.7} perigee={356.5} period={27.322}>
+            <Moon />
+          </Orbit>
+          <Orbit apogee={4.18 + 6.371} perigee={4.22 + 6.371} period={1.55}>
+            <Html occlude={[earthRef]} center>
+              <h1 style={{ color: "white" }}>ISS</h1>
+            </Html>
+          </Orbit>
+        </Earth>
+      </Suspense>
     </>
   );
 };
 
 const Home: NextPage = () => {
   const classes = useStyles();
+
+  const { speed } = useControls({
+    speed: {
+      value: 1,
+      min: 1,
+      max: 10000,
+    },
+  });
+
+  useEffect(() => {
+    config.speed = speed;
+  }, [speed]);
 
   return (
     <div className={classes.container}>
@@ -28,8 +59,8 @@ const Home: NextPage = () => {
         <meta name="description" content="Learn about space" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <Canvas shadows>
-        <Content />
+      <Canvas shadows gl={{ logarithmicDepthBuffer: true }}>
+        <Scene />
       </Canvas>
     </div>
   );
