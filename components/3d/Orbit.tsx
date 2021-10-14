@@ -1,5 +1,5 @@
 import { useFrame } from "@react-three/fiber";
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import { useSnapshot } from "valtio";
 
 import { config } from "../../state/proxies";
@@ -14,6 +14,8 @@ const Orbit: React.FC<OrbitProps> = ({ apogee, perigee, period, children }) => {
   const orbitRef = useRef<THREE.Group>(null);
   const objectRef = useRef<THREE.Group>(null);
   const snap = useSnapshot(config);
+
+  const initalRotation = useMemo(() => Math.random() * Math.PI * 2, []);
 
   useFrame((_, delta) => {
     if (orbitRef.current && objectRef.current) {
@@ -31,7 +33,7 @@ const Orbit: React.FC<OrbitProps> = ({ apogee, perigee, period, children }) => {
   });
 
   return (
-    <group ref={orbitRef}>
+    <group ref={orbitRef} rotation-y={initalRotation}>
       <group ref={objectRef}>{children}</group>
     </group>
   );
