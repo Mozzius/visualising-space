@@ -26,8 +26,6 @@ const Moon: React.FC<MoonProps> = ({}) => {
     }
   });
 
-  console.log(snap.speed);
-
   return (
     <mesh ref={moonRef}>
       <sphereBufferGeometry args={[radius, 512, 512]} />
