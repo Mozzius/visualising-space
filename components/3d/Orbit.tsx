@@ -1,39 +1,47 @@
+import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
 import { useSnapshot } from "valtio";
 
 import { config } from "../../state/proxies";
 
+// Keplarian orbit
+
+//           a (1 - e^2)
+// r(th) = ---------------
+//          1 + e cos(th)
+
 interface OrbitProps {
-  period: number; // in days
-  apogee: number;
-  perigee: number;
+  period: number; // days
+  semiMajorAxis: number; // km
+  eccentricity: number;
+  initialTrueAnomaly?: number; // radians
 }
 
-const Orbit: React.FC<OrbitProps> = ({ apogee, perigee, period, children }) => {
+const Orbit: React.FC<OrbitProps> = ({
+  period,
+  semiMajorAxis,
+  eccentricity,
+  initialTrueAnomaly = 0,
+  children,
+}) => {
   const orbitRef = useRef<THREE.Group>(null);
   const objectRef = useRef<THREE.Group>(null);
   const snap = useSnapshot(config);
 
-  const initalRotation = useMemo(() => Math.random() * Math.PI * 2, []);
-
   useFrame((_, delta) => {
     if (orbitRef.current && objectRef.current) {
-      orbitRef.current.rotation.y += (delta * snap.speed) / (60 * 60 * period);
-
-      const theta = orbitRef.current.rotation.y % (Math.PI * 2);
+      const theta =
+        orbitRef.current.rotation.y + (delta * snap.speed) / (60 * 60 * period);
+      orbitRef.current.rotation.y = theta;
 
       objectRef.current.position.x =
-        (apogee * perigee) /
-        Math.sqrt(
-          Math.pow(perigee, 2) * Math.pow(Math.sin(theta), 2) +
-            Math.pow(apogee, 2) * Math.pow(Math.cos(theta), 2),
-        );
+        (semiMajorAxis * (1 - eccentricity ** 2)) /
+        (1 + eccentricity * Math.cos(theta));
     }
   });
 
   return (
-    <group ref={orbitRef} rotation-y={initalRotation}>
+    <group ref={orbitRef} rotation-y={initialTrueAnomaly}>
       <group ref={objectRef}>{children}</group>
     </group>
   );
