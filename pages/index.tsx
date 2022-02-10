@@ -5,7 +5,7 @@ import type { NextPage } from "next";
 import Head from "next/head";
 import { useEffect } from "react";
 import { createUseStyles } from "react-jss";
-import EarthMoon from "../components/3d/EarthMoon";
+import Orrery from "../components/3d/Orrery";
 
 import { config } from "../state/proxies";
 
@@ -39,7 +39,7 @@ const Home: NextPage = () => {
           camera.lookAt(0, 0, 0);
         }}
       >
-        <EarthMoon />
+        <Orrery />
       </Canvas>
       <Loader />
     </div>

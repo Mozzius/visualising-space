@@ -5,10 +5,67 @@ import { useSnapshot } from "valtio";
 import { config } from "../../state/proxies";
 
 // Keplarian orbit
-
+//
+// Distance between a central body and an orbiting body
+// https://en.wikipedia.org/wiki/Kepler_orbit
+//
 //           a (1 - e^2)
 // r(th) = ---------------
 //          1 + e cos(th)
+//
+// where:
+//
+// r = distance
+// a = semi-major axis
+// e = eccentricity
+// th = true anomaly
+//
+// Position as a function of time
+// https://en.wikipedia.org/wiki/Kepler%27s_laws_of_planetary_motion#Position_as_a_function_of_time
+//
+// M = E - e * sin(E)
+//
+// M = mean anomaly
+// E = eccentric anomaly
+// e = eccentricity
+//
+// we can rearrange to
+//
+// M - E + e * sin(E) = 0
+
+const kepler = (
+  meanAnomaly: number,
+  eccentricAnomaly: number,
+  eccentricity: number,
+) => {
+  // we're trying to solve for E, so return 0 when we find it
+  return (
+    meanAnomaly - eccentricAnomaly + eccentricity * Math.sin(eccentricAnomaly)
+  );
+};
+
+// using Newton-Raphson to solve for E
+const solve = (
+  func: (...args: any[]) => number,
+  initial: number = 0,
+  maxIteration: number = 100,
+) => {
+  const h = 0.0001;
+  const acceptableError = 0.000000001;
+  let guess = initial;
+
+  for (let i = 0; i < maxIteration; i++) {
+    const y = func(guess);
+    if (Math.abs(y) < acceptableError) {
+      return guess;
+    }
+    const slope = (func(guess + h) - y) / h;
+    const step = y / slope;
+
+    guess -= step;
+  }
+  return guess;
+};
 
 interface OrbitProps {
   period: number; // days
@@ -24,20 +81,26 @@ const Orbit: React.FC<OrbitProps> = ({
   initialTrueAnomaly = 0,
   children,
 }) => {
-  const orbitRef = useRef<THREE.Group>(null);
-  const objectRef = useRef<THREE.Group>(null);
+  const orbitRef = useRef<THREE.Group>(null!);
+  const objectRef = useRef<THREE.Group>(null!);
   const snap = useSnapshot(config);
 
-  useFrame((_, delta) => {
-    if (orbitRef.current && objectRef.current) {
-      const theta =
-        orbitRef.current.rotation.y + (delta * snap.speed) / (60 * 60 * period);
-      orbitRef.current.rotation.y = theta;
+  useFrame(({ clock }) => {
+    const periodInSeconds = (period * 24 * 60 * 60) / snap.speed;
+    const t = (clock.getElapsedTime() % periodInSeconds) / periodInSeconds;
+    const meanAnomaly = 2 * Math.PI * t;
+    const eccentricAnomaly = solve(x => kepler(x, meanAnomaly, eccentricity));
+    const trueAnomaly =
+      2 *
+      Math.atan(
+        Math.sqrt((1 + eccentricity) / (1 - eccentricity)) *
+          Math.tan(eccentricAnomaly / 2),
+      );
+    orbitRef.current.rotation.y = trueAnomaly;
 
-      objectRef.current.position.x =
-        (semiMajorAxis * (1 - eccentricity ** 2)) /
-        (1 + eccentricity * Math.cos(theta));
-    }
+    objectRef.current.position.x =
+      (semiMajorAxis * (1 - eccentricity ** 2)) /
+      (1 + eccentricity * Math.cos(trueAnomaly));
   });
 
   return (
