@@ -8,11 +8,18 @@ import { useControls } from "leva";
 import Satellite from "./Satellite";
 
 const satelliteData = [
+  // {
+  //   name: "Sputnik",
+  //   period: 0.0668,
+  //   periapsis: 0.215,
+  //   apoapsis: 0.939,
+  //   inclination: 65.1,
+  // },
   {
-    name: "Sputnik",
+    name: "Geostationary",
     period: 0.0668,
-    periapsis: 0.215,
-    apoapsis: 100.939,
+    periapsis: 35.785,
+    apoapsis: 35.785,
     inclination: 65.1,
   },
 ];

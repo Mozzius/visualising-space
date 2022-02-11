@@ -18,6 +18,7 @@ const Satellite: React.FC<SatelliteProps> = ({
   return (
     <>
       <Sphere
+        scale={0.2}
         onPointerEnter={() => setHovered(true)}
         onPointerLeave={() => setHovered(false)}
       />
