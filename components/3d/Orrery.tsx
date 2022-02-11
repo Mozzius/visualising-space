@@ -5,15 +5,15 @@ import Orbit from "./Orbit";
 import Moon from "./Planets/Moon";
 import Earth from "./Planets/Earth";
 import { useControls } from "leva";
+import Satellite from "./Satellite";
 
 const satelliteData = [
   {
     name: "Sputnik",
     period: 0.0668,
-    semiMajorAxis: 6.955 + 6.371 + 100,
-    // eccentricity: 0.05201,
-    eccentricity: 0.9,
-    periapsis: 2.15,
+    periapsis: 0.215,
+    apoapsis: 100.939,
+    inclination: 65.1,
   },
 ];
 
@@ -29,19 +29,19 @@ const Orrery: React.FC = () => {
       <directionalLight color={0xffffff} intensity={1} position={[0, 0, 1]} />
       <Suspense fallback={null}>
         <Earth ref={earthRef}>
-          <Moon />
+          <Orbit apoapsis={405_400} periapsis={362_600} period={27.321}>
+            <Moon />
+          </Orbit>
           {satellites &&
             satelliteData.map(satellite => (
               <Orbit
                 key={satellite.name}
-                semiMajorAxis={satellite.semiMajorAxis}
-                eccentricity={satellite.eccentricity}
+                apoapsis={satellite.apoapsis}
+                periapsis={satellite.periapsis}
                 period={satellite.period}
+                surface={6.371}
               >
-                <Sphere />
-                {/* <Html occlude={[earthRef]} center>
-                  <h1 style={{ color: "white" }}>{satellite.name}</h1>
-                </Html> */}
+                <Satellite satellite={satellite} occlude={[earthRef]} />
               </Orbit>
             ))}
         </Earth>

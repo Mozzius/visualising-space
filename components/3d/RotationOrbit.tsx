@@ -84,42 +84,46 @@ const Orbit: React.FC<OrbitProps> = ({
   children,
 }) => {
   const orbitRef = useRef<THREE.Group>(null!);
+  const objectRef = useRef<THREE.Group>(null!);
   const snap = useSnapshot(config);
 
-  const { semiMajorAxis, eccentricity, semiMinorAxis, linearEccentricity } =
-    useMemo(() => {
-      const adjustedApoapsis = apoapsis + surface;
-      const adjustedPeriapsis = periapsis + surface;
-      const semiMajorAxis = (adjustedApoapsis + adjustedPeriapsis) / 2;
-      const linearEccentricity = semiMajorAxis - adjustedPeriapsis;
-      const eccentricity = linearEccentricity / semiMajorAxis;
-      const semiMinorAxis = Math.sqrt(
-        semiMajorAxis ** 2 - linearEccentricity ** 2,
-      );
-      return { semiMajorAxis, eccentricity, semiMinorAxis, linearEccentricity };
-    }, [apoapsis, periapsis, surface]);
-
-  console.group();
-  console.log("Semi Major Axis", semiMajorAxis);
-  console.log("Eccentricity", eccentricity);
-  console.log("Semi Minor Axis", semiMinorAxis);
-  console.groupEnd();
+  const { semiMajorAxis, eccentricity } = useMemo(() => {
+    const adjustedApoapsis = (apoapsis + surface) / 1000;
+    const adjustedPeriapsis = (periapsis + surface) / 1000;
+    const semiMajorAxis = (adjustedApoapsis + adjustedPeriapsis) / 2;
+    const linearEccentricity = semiMajorAxis - adjustedPeriapsis;
+    const eccentricity = linearEccentricity / semiMajorAxis;
+    const semiMinorAxis = Math.sqrt(
+      semiMajorAxis ** 2 - linearEccentricity ** 2,
+    );
+    return { semiMajorAxis, eccentricity, semiMinorAxis };
+  }, [apoapsis, periapsis, surface]);
 
   useFrame(({ clock }) => {
     const periodInSeconds = (period * 24 * 60 * 60) / snap.speed;
     const t =
-      ((clock.getElapsedTime() % periodInSeconds) / periodInSeconds +
-        initialPeriod) %
-      1;
+      (clock.getElapsedTime() % periodInSeconds) / periodInSeconds +
+      (initialPeriod % 1);
     const meanAnomaly = 2 * Math.PI * t;
     const eccentricAnomaly = solve(x => kepler(x, meanAnomaly, eccentricity));
+    const trueAnomaly =
+      2 *
+      Math.atan(
+        Math.sqrt((1 + eccentricity) / (1 - eccentricity)) *
+          Math.tan(eccentricAnomaly / 2),
+      );
+    orbitRef.current.rotation.y = trueAnomaly;
 
-    orbitRef.current.position.z =
-      Math.cos(eccentricAnomaly) * semiMajorAxis - linearEccentricity;
-    orbitRef.current.position.x = Math.sin(eccentricAnomaly) * semiMinorAxis;
+    objectRef.current.position.x =
+      semiMajorAxis *
+      ((1 - eccentricity ** 2) / (1 + eccentricity * Math.cos(trueAnomaly)));
   });
 
-  return <group ref={orbitRef}>{children}</group>;
+  return (
+    <group ref={orbitRef}>
+      <group ref={objectRef}>{children}</group>
+    </group>
+  );
 };
 
 export default Orbit;

@@ -6,7 +6,6 @@ import { useSnapshot } from "valtio";
 import textureMap from "../../../images/moon-4k.jpg";
 import displacementMap from "../../../images/moonbump4k.jpg";
 import { config } from "../../../state/proxies";
-import Orbit from "../Orbit";
 
 const radius = 1.737;
 
@@ -28,17 +27,15 @@ const Moon: React.FC<MoonProps> = ({}) => {
   });
 
   return (
-    <Orbit semiMajorAxis={384_399} eccentricity={0.0549} period={27.321}>
-      <mesh ref={moonRef}>
-        <sphereBufferGeometry args={[radius, 512, 512]} />
-        <meshStandardMaterial
-          map={texture}
-          displacementMap={displacement}
-          displacementScale={0.02 * radius}
-          roughness={1}
-        />
-      </mesh>
-    </Orbit>
+    <mesh ref={moonRef}>
+      <sphereBufferGeometry args={[radius, 512, 512]} />
+      <meshStandardMaterial
+        map={texture}
+        displacementMap={displacement}
+        displacementScale={0.02 * radius}
+        roughness={1}
+      />
+    </mesh>
   );
 };
 
