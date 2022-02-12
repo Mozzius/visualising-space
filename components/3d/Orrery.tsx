@@ -1,5 +1,5 @@
-import { Html, OrbitControls, Sphere, Stars } from "@react-three/drei";
 import { Suspense, useRef } from "react";
+import { OrbitControls, Stars } from "@react-three/drei";
 
 import Orbit from "./Orbit";
 import Moon from "./Planets/Moon";
@@ -8,18 +8,26 @@ import { useControls } from "leva";
 import Satellite from "./Satellite";
 
 const satelliteData = [
-  // {
-  //   name: "Sputnik",
-  //   period: 0.0668,
-  //   periapsis: 0.215,
-  //   apoapsis: 0.939,
-  //   inclination: 65.1,
-  // },
   {
-    name: "Geostationary",
+    name: "Sputnik",
+    period: 0.0668,
+    periapsis: 0.215,
+    apoapsis: 0.939,
+    inclination: 65.1,
+  },
+  {
+    name: "Geostationary Orbit",
     period: 0.0668,
     periapsis: 35.785,
     apoapsis: 35.785,
+    inclination: 0,
+  },
+  
+  {
+    name: "International Space Station",
+    period: 0.06436,
+    periapsis: 0.418,
+    apoapsis: 0.422,
     inclination: 65.1,
   },
 ];
@@ -36,7 +44,7 @@ const Orrery: React.FC = () => {
       <directionalLight color={0xffffff} intensity={1} position={[0, 0, 1]} />
       <Suspense fallback={null}>
         <Earth ref={earthRef}>
-          <Orbit apoapsis={405_400} periapsis={362_600} period={27.321}>
+          <Orbit apoapsis={405.4} periapsis={362.6} period={27.321}>
             <Moon />
           </Orbit>
           {satellites &&

@@ -1,8 +1,10 @@
-import { useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useSnapshot } from "valtio";
 
 import { config } from "../../state/proxies";
+import { BufferAttribute } from "three";
+import { useControls } from "leva";
 
 // Keplarian orbit
 //
@@ -85,6 +87,8 @@ const Orbit: React.FC<OrbitProps> = ({
 }) => {
   const orbitRef = useRef<THREE.Group>(null!);
   const snap = useSnapshot(config);
+  const lineRef = useRef<THREE.BufferGeometry>(null!);
+  const { showOrbit } = useControls({ showOrbit: false });
 
   const { semiMajorAxis, eccentricity, semiMinorAxis, linearEccentricity } =
     useMemo(() => {
@@ -105,21 +109,66 @@ const Orbit: React.FC<OrbitProps> = ({
   console.log("Semi Minor Axis", semiMinorAxis);
   console.groupEnd();
 
+  const pointOnOrbit = useCallback(
+    (t: number) => {
+      const meanAnomaly = 2 * Math.PI * t;
+      const eccentricAnomaly = solve(x => kepler(x, meanAnomaly, eccentricity));
+
+      return {
+        z: Math.cos(eccentricAnomaly) * semiMajorAxis - linearEccentricity,
+        x: Math.sin(eccentricAnomaly) * semiMinorAxis,
+      };
+    },
+    [eccentricity, linearEccentricity, semiMajorAxis, semiMinorAxis],
+  );
+
   useFrame(({ clock }) => {
     const periodInSeconds = (period * 24 * 60 * 60) / snap.speed;
     const t =
       ((clock.getElapsedTime() % periodInSeconds) / periodInSeconds +
         initialPeriod) %
       1;
-    const meanAnomaly = 2 * Math.PI * t;
-    const eccentricAnomaly = solve(x => kepler(x, meanAnomaly, eccentricity));
 
-    orbitRef.current.position.z =
-      Math.cos(eccentricAnomaly) * semiMajorAxis - linearEccentricity;
-    orbitRef.current.position.x = Math.sin(eccentricAnomaly) * semiMinorAxis;
+    const { x, z } = pointOnOrbit(t);
+
+    orbitRef.current.position.z = z;
+    orbitRef.current.position.x = x;
   });
 
-  return <group ref={orbitRef}>{children}</group>;
+  useEffect(() => {
+    if (showOrbit) {
+      const NUM_POINTS = 100;
+      const first = pointOnOrbit(0);
+      const points = [first.x, 0, first.z];
+      for (let i = 1; i < NUM_POINTS; i++) {
+        const t = i / NUM_POINTS;
+        const { x, z } = pointOnOrbit(t);
+        points.push(x, 0, z);
+        points.push(x, 0, z);
+      }
+      points.push(first.x, 0, first.z);
+      const vertices = new Float32Array(points);
+      lineRef.current.setAttribute(
+        "position",
+        new BufferAttribute(vertices, 3),
+      );
+    } else {
+      lineRef.current.setAttribute(
+        "position",
+        new BufferAttribute(new Float32Array([]), 3),
+      );
+    }
+  }, [pointOnOrbit, showOrbit]);
+
+  return (
+    <group>
+      <lineSegments>
+        <bufferGeometry ref={lineRef} />
+        <lineBasicMaterial color="white" linewidth={0.5} />
+      </lineSegments>
+      <group ref={orbitRef}>{children}</group>
+    </group>
+  );
 };
 
 export default Orbit;
