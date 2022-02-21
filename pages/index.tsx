@@ -33,6 +33,7 @@ const Home: NextPage = () => {
       </Head>
       <Canvas
         shadows
+        dpr={window.devicePixelRatio}
         gl={{ logarithmicDepthBuffer: true }}
         onCreated={({ camera }) => {
           camera.position.set(15, 1, 4);
